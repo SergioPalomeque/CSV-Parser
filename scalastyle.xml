@@ -1,0 +1,8 @@
+<scalastyle commentFilter="enabled">
+  <name>Santander Scala Code Style</name>
+  <check enabled="true" class="org.scalastyle.scalariform.ScalaDocChecker" level="error">
+    <parameters>
+      <parameter name="ignoreOverride">true</parameter>
+    </parameters>
+  </check>
+</scalastyle>
