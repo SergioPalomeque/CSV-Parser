@@ -1,17 +1,13 @@
 package com.csv
 
-import java.nio.charset.CodingErrorAction
-import java.util.Scanner
 
-import scala.collection.JavaConverters._
-import scala.io.{Codec, Source}
+import com.csv.readers.ReaderFactory
 
 
 object App extends App {
 
-  implicit val codec: Codec = Codec("UTF-8")
-  codec.onMalformedInput(CodingErrorAction.REPLACE)
-  codec.onUnmappableCharacter(CodingErrorAction.REPLACE)
+  val filePath = "test.csv"
+  val delimiter = "\\r\\n"
 
   def printLine(line: Seq[String]): Unit = {
     println("line: " + line.mkString("|"))
@@ -20,13 +16,18 @@ object App extends App {
     println(result.mkString)
   }
 
-  val file = Source.fromFile("test.csv").bufferedReader()
 
-  val input = new Scanner(file)
-    .useDelimiter("\\r\\n")
-    .asScala
+  val csv = for {
+    fileType <- ReaderFactory.apply(filePath, delimiter).right
+    csv <- fileType.readCsv.right
+  } yield csv
 
-  input.foldLeft[(Seq[String], String)](Nil, "") {
+  if (csv.isLeft) {
+    println(s"Error: ${csv.left.get}")
+    sys.exit(1)
+  }
+
+  csv.right.get.foldLeft[(Seq[String], String)](Nil, "") {
     case ((accumulatedLines, accumulatedString), newLine) => {
       val isInAnOpenString = accumulatedString.nonEmpty
       val lineHasOddQuotes =  newLine.count(_ == '"') % 2 == 1
