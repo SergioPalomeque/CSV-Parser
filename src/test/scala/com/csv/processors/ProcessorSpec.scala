@@ -1,63 +1,80 @@
 package com.csv.processors
 
+import org.mockito.Mockito.{spy, times, verify}
 import org.scalatest.FunSpec
 import org.scalatest.Matchers._
+import org.scalatest.mockito.MockitoSugar
 
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 
-class ProcessorSpec extends FunSpec {
+class ProcessorSpec extends FunSpec with MockitoSugar {
 
-  describe(classOf[Processor[List[(Int, String)], Unit]].getSimpleName) {
+  describe(classOf[Processor[Unit]].getSimpleName) {
 
-    it("should receive a string iterator and parser every line") {
+    it("should receive a string iterator and parser every line without error") {
 
-      val quote = '\''.toString
-      val inputSeparator = "\\|"
+      val header = false
+      val quotes = "\'"
+      val separator = "\\|"
 
-      val process = new Processor[List[(Int, String)], Unit] {
-        override def header: Boolean = true
-        override def separator: String = inputSeparator
-        override def quotes: String = quote
-        def lineParser(line: List[String]): Either[String, List[(Int, String)]] = {
-          val r = separator + "(?=([^" + quotes + "]|" + quotes + "[^" + quotes + "]*" + quotes + ")*$)"
-          val cols = line.mkString(" ").split(r, -1)
-          val result = cols.map(_.trim).zipWithIndex.map(_.swap).toList
-
-          Right(result)
-        }
+      val process = new Processor[Unit] {
         def writeLine(line: List[(Int, String)]): Try[Unit] = {
-          Try(println(line.mkString(" ")))
+          Success()
         }
       }
 
       val lines2 = Iterator("a|asaa|", "sds'd|s|s'dsd", "dssdsd|dsds")
-      process.run(lines2, List.empty[String]).right.get shouldBe 0
+      process.run(lines2,  header, separator, quotes).right.get shouldBe 0
 
     }
 
-    it("should receive a string iterator and parser every line2") {
+    it("should stop to parser the csv file when writeLine method get an exception") {
 
-      val quote = '\''.toString
-      val inputSeparator = "\\|"
-
-      val process = new Processor[List[(Int, String)], Unit] {
-        override def header: Boolean = true
-        override def separator: String = inputSeparator
-        override def quotes: String = quote
-        def lineParser(line: List[String]): Either[String, List[(Int, String)]] = {
-          val r = separator + "(?=([^" + quotes + "]|" + quotes + "[^" + quotes + "]*" + quotes + ")*$)"
-          val cols = line.mkString(" ").split(r, -1)
-          val result = cols.map(_.trim).zipWithIndex.map(_.swap).toList
-
-          Right(result)
-        }
+      val process = new Processor[Unit] {
         def writeLine(line: List[(Int, String)]): Try[Unit] = {
-          Try(println(line.mkString(" ")))
+          Failure(new Exception("Error to write a line"))
         }
       }
 
       val lines2 = Iterator("a|asaa|", "sds'd|s|s'dsd", "dssdsd|dsds")
-      process.run(lines2, List.empty[String]).right.get shouldBe 0
+      process.run(lines2).left.get shouldBe "Error to write a line"
+
+    }
+
+    it("should stop to parser the csv file when lineParser method get an exception") {
+
+      val process = new Processor[Unit] {
+        override protected def lineParser(line: List[String], separator: String, quotes: String): Either[String, List[(Int, String)]] = {
+          Left("Error to parser a line")
+        }
+        def writeLine(line: List[(Int, String)]): Try[Unit] = {
+          Success()
+        }
+      }
+
+      val lines2 = Iterator("a|b|c")
+      process.run(lines2).left.get shouldBe "Error to parser a line"
+
+    }
+
+    it("should parser the file with the separator and quotes length bigger than 1") {
+      val header = false
+      val quotes = "ZZ"
+      val separator = "TT"
+
+
+      val process = spy(new Processor[Unit] {
+        def writeLine(line: List[(Int, String)]): Try[Unit] = {
+          Success()
+        }
+      })
+
+      val lines2 = Iterator("aTTbTT", "dTTeTTf", "aTTbTThello ZZhow TT are", "youZZ")
+      process.run(lines2, header, separator, quotes)
+
+      verify(process, times(1)).writeLine(List((0,"a"), (1,"b"), (2,"")))
+      verify(process, times(1)).writeLine(List((0,"d"), (1,"e"), (2,"f")))
+      verify(process, times(1)).writeLine(List((0,"a"), (1,"b"), (2,"hello ZZhow TT are youZZ")))
 
     }
 
