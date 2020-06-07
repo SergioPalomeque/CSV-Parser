@@ -32,6 +32,11 @@ object App extends App {
     }
   }
 
-  process.run(csv.right.get, inputHeader, inputSeparator, inputQuote)
+  process.run(csv.right.get, inputHeader, inputSeparator, inputQuote) match {
+    case Right(_) => sys.exit(0)
+    case Left(error) =>
+      println(s"Error to parser CSV: $error")
+      sys.exit(1)
+  }
 
 }
