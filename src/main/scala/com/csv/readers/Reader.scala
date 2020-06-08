@@ -8,8 +8,17 @@ sealed trait Reader {
   def util: Csv
   def filePath: String
   def delimiter: String
+  /*
+  * TODO: in general, to do a better parser of failures that can arise when a file is read.
+  *  In this way, this API could provide a better experience for clients and for user
+  *  executing the process.
+  *
+  *  Example: To change Either[String, Iterator[String]] -> Either[ErrorMessage, Iterator[String]]
+  */
   def readCsv: Either[String, Iterator[String]]
 }
+
+
 
 case class LocalFile(filePath: String, delimiter: String, util: Csv) extends Reader {
 
@@ -21,6 +30,9 @@ case class LocalFile(filePath: String, delimiter: String, util: Csv) extends Rea
   }
 }
 
+/*
+ * TODO: to remove the unnecessary 'Csv with'
+ */
 case class HttpFile(filePath: String, delimiter: String, util: Csv) extends Reader with Csv {
 
   override def readCsv: Either[String, Iterator[String]] = {

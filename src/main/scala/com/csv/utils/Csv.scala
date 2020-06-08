@@ -7,6 +7,10 @@ import scala.io.{Codec, Source}
 import scala.collection.JavaConverters._
 import scala.util.Try
 
+/*
+ * TODO: to test different codes file. I could not test it and I sure this could be done
+ *  in a better way
+ */
 trait Csv {
 
   def readLocalFile(filePath: String, delimiter: String): Try[Iterator[String]] = {

@@ -15,6 +15,12 @@ object AppArgs {
 }
 
 object Configuration {
+  /*
+   * TODO: Improve the function to make sure filePath value is a required field
+   *  and the other ones are optionals. Return an error according with
+   *
+   * TODO: Unit test for this object are missing
+   */
   def readArgs(args: Array[String]): AppArgs = {
     val argsInstance = args.sliding(2, 1).toList.foldLeft(AppArgs.empty) {
       case (accumulatedArgs, currentArgs) => currentArgs match {

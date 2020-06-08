@@ -6,6 +6,14 @@ import scala.util.{Failure, Success, Try}
 
 
 trait Processor[A] {
+  /*
+   * TODO: To add a implicit Type Class in this method in order to make it more generic
+   *  to save the parsed line. This Type class can have different methods implemented to
+   *  save the parsed line into any database or another file.
+   *
+   * TODO: Another thing to add would be the header field if it exist. In this way, it would
+   *  be possible, for example, to create a json with field name and their values.
+   */
   def writeLine(line: List[(Int, String)]): Try[A]
 
   protected def lineParser(line: List[String], quotes: String, delimiter: String): Either[String, List[(Int, String)]] = {
@@ -29,6 +37,10 @@ trait Processor[A] {
     } yield ()
   }
 
+  /*
+   * TODO: To change the returned value type Either[String, Int] by Either[ErrorProcess, Code].
+   *  This change would offer a better user experience.
+   */
   def run(lines: Iterator[String],
           header: Boolean, quotes: String, delimiter: String): Either[String, Int] = {
     @tailrec

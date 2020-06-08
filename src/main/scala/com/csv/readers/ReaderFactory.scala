@@ -9,6 +9,10 @@ object ReaderFactory {
   val FilePath: Regex = """(http|file)://(.*)\.([a-z]+)""".r
   val RelativePath: Regex = """(.*)\.([a-z]+)""".r
 
+  /*
+   * TODO: To add more interesting places where to read the file such as Azure
+   *  data lake or AWS S3
+   */
   def apply(filePath: String, delimiter: String): Either[String, Reader] =
     filePath match {
       case FilePath("http", _, _) => Right(HttpFile(filePath, delimiter, Csv))
